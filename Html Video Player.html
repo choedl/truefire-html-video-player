@@ -1,0 +1,122 @@
+<html>
+  <meta charset="UTF-8"/> 
+  <head>
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js"
+	    integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="
+	    crossorigin="anonymous">
+    </script>
+  </head>
+  <body>
+    <div id="navigation"></div>
+    <div id="content"></div>
+    <script>
+      var cdromMainFile;
+      var childFiles = [];
+      
+      $.ajax({
+        url: 'data/cdrom-main.xml',
+        dataType: "xml",
+        async: false,
+        success: function(document) { cdromMainFile = document; },
+        error: function() {
+          alert("Parsing did not work");
+        }
+      });
+
+      $(cdromMainFile).find("menuitem").each(function() {
+        var menufile = $(this).attr('menufile');
+        $.ajax({
+          url: menufile,
+          dataType: "xml",
+          async: false,
+          success: function(document) { childFiles.push(document) },
+          error: function() {
+            alert("Parsing did not work");
+          }
+        });          
+      });
+
+      $(cdromMainFile).find("video,menuitem").each(function() {
+        // TODO find a better way to distinguish between video and menuitem
+        if (typeof $(this).attr('videofile') !== 'undefined') {
+          appendVideo(this);
+        } else {
+          var childFile = childFiles.shift();
+          $(childFile).find("video").each(function() {
+            appendVideo(this);
+          });
+        }
+      });
+
+      function appendVideo(document) {
+        var title = $(document).attr('title');
+        var subtitle = $(document).attr('subtitle');
+
+        $("#content").append(
+          `<div style="display: none" id=${chapterId(title, subtitle)}><p>
+           <h2>${title}</h2>
+           <h3>${subtitle}</h3><br/>
+           ${$(document).find('txt').text()}<br/>
+           ${chartLinks($(document).find('chart').text(), $(document).find('ptab').text())}
+           ${videoPlayer($(document).attr('videofile'))}
+           </div>`
+        );
+      };
+
+       // TODO add menutime titles and subtitles to select      
+       var chapterIds = $.map($("#content [id]"), (n, i) => n.id);
+       $("#navigation").append(
+         `<select id="chapterSelection">
+           ${chapterIds.reduce(function(previous, current, index, array) {
+                               var title = $(`#${current} h2`).text();
+                               var subtitle = $(`#${current} h3`).text();
+                               var id = current.substring("chapter".length);
+                               var newEntry = `<option id=${id}>${title} - ${subtitle}</option>`;
+                               return previous + newEntry;
+                            }, '')}
+          </select>`
+       );
+
+       $("#chapterSelection").change(function() {
+         $("#content").children().each(function() {
+           $(this).hide();
+           $("video").each(function () { this.pause() });    
+         });
+         $("#chapterSelection option:selected").each(function() {          
+           var id = $(this).attr('id');
+           $(`#chapter${id}`).show();
+         });       
+       }).change();       
+
+     function chartLinks(chart, ptab) {
+       if (chart.length > 0 || ptab.length > 0)
+         return `<br/> <a href=${chart}>Chart</a> <a href=${ptab}>Power Tab</a>`;
+       else
+         return '';       
+     };
+     
+     function chapterId(title, subtitle) {
+       return `chapter${removeSpecialCharacters(title)}${removeSpecialCharacters(subtitle)}`;
+     };
+
+     function removeSpecialCharacters(str) {
+       return str.replace(/(:|\.|'|,|\/|\-|\?|\&| |)/g, "");
+     };
+
+     function videoPlayer(filePath) {
+       return filePath.indexOf(".mp4") >= 0 ? html5Player(filePath) : flashPlayer(filePath);
+     };
+
+     function html5Player(filePath) {
+       return `<br/><video controls>
+               <source src=${filePath} type="video/mp4">
+               Your browser does not support the video tag
+               </video>`;
+     };
+
+     function flashPlayer(filePath) {
+       return `<br/><embed src=${filePath} type="video/x-flv"/>`;
+     };
+  </script>
+  </body>  
+</html>
