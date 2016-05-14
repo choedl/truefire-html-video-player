@@ -2,8 +2,8 @@
   <meta charset="UTF-8"/> 
   <head>
     <script src="https://code.jquery.com/jquery-2.2.3.min.js"
-	    integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="
-	    crossorigin="anonymous">
+      integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="
+      crossorigin="anonymous">
     </script>
   </head>
   <body>
@@ -68,12 +68,12 @@
        $("#navigation").append(
          `<select id="chapterSelection">
            ${chapterIds.reduce(function(previous, current, index, array) {
-                               var title = $(`#${current} h2`).text();
-                               var subtitle = $(`#${current} h3`).text();
-                               var id = current.substring("chapter".length);
-                               var newEntry = `<option id=${id}>${title} - ${subtitle}</option>`;
-                               return previous + newEntry;
-                            }, '')}
+                                 var title = $(`#${current} h2`).text();
+                                 var subtitle = $(`#${current} h3`).text();
+                                 var id = current.substring("chapter".length);
+                                 var newEntry = `<option id=${id}>${title} - ${subtitle}</option>`;
+                                 return previous + newEntry;
+                               }, '')}
           </select>`
        );
 
